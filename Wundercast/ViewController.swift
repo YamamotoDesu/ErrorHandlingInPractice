@@ -77,33 +77,43 @@ class ViewController: UIViewController {
                 self?.locationManager.requestWhenInUseAuthorization()
                 self?.locationManager.startUpdatingLocation()
                 
-                self?.searchCityName.text = "Current Location"
-            })
+                self?.searchCityName.text = "Current Location"})
+        
+        let geoLocation = geoInput.flatMap {
+             return currentLocation.take(1)
+        }
                 
-                let geoLocation = geoInput.flatMap {
-                    return currentLocation.take(1)
-                }
+        let geoSearch = geoLocation.flatMap { location in
+             return ApiController.shared.currentWeather(at: location.coordinate)
+                  .catchErrorJustReturn(.empty)
+        }
                 
-                let geoSearch = geoLocation.flatMap { location in
-                    return ApiController.shared.currentWeather(at: location.coordinate)
-                        .catchErrorJustReturn(.empty)
-                }
-                
-                let searchInput = searchCityName.rx.controlEvent(.editingDidEndOnExit)
-                .map { [weak self] _ in self?.searchCityName.text ?? "" }
-                .filter { !$0.isEmpty }
+        let searchInput = searchCityName.rx.controlEvent(.editingDidEndOnExit)
+            .map { [weak self] _ in self?.searchCityName.text ?? "" }
+            .filter { !$0.isEmpty }
+        
+        let maxAttempts = 4
         
         let textSearch = searchInput.flatMap { text in
-          return ApiController.shared.currentWeather(city: text)
-            .do(onNext: { [weak self] data in
-              self?.cache[text] = data
-            })
-            .retry(3)
-            .catchError { [weak self] error in
-              return Observable.just(self?.cache[text] ?? .empty)
-            }
+            return ApiController.shared.currentWeather(city: text)
+                .do(onNext: { [weak self] data in
+                    self?.cache[text] = data
+                }).retryWhen { e in
+                    return e.enumerated().flatMap { attempt, error -> Observable<Int> in
+                        print("== retrying after \(attempt + 1) seconds ==")
+                        if attempt >= maxAttempts - 1 {
+                          return Observable.error(error)
+                        }
+                        return Observable<Int>.timer(.seconds(attempt + 1),
+                                                     scheduler: MainScheduler.instance)
+                                              .take(1)
+                    }
+                }
+                .catchError { [weak self] error in
+                    return Observable.just(self?.cache[text] ?? .empty)
+                }
         }
-
+        
         
         let search = Observable.merge(geoSearch, textSearch)
             .asDriver(onErrorJustReturn: .empty)
