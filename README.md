@@ -135,20 +135,6 @@ ApiController
 
 ViewController
 ```swift
-<!--         let textSearch = searchInput.flatMap { text in
-            return ApiController.shared.currentWeather(city: text)
-                .do(onNext: { [weak self] data in
-                    self?.cache[text] = data
-                },
-                onError: { error in
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self = self else { return }
-                        InfoView.showIn(viewController: self, message: "An error occurred")
-                    }
-                })
-                .catchError { [weak self] error in
-                    return Observable.just(self?.cache[text] ?? .empty)
-                } -->
          let textSearch = searchInput.flatMap { text in
             return ApiController.shared.currentWeather(city: text)
                 .do(onNext: { [weak self] data in
