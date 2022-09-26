@@ -18,6 +18,7 @@
 ```
 <img width="400" alt="スクリーンショット 2022-09-25 13 55 54" src="https://user-images.githubusercontent.com/47273077/192276278-0821865d-32d2-4d11-a0b4-9b4b2eaf8352.png">
 
+------
 ## Retrying on error
 
 ```swift
@@ -36,4 +37,6 @@
 
 <img width="400" alt="スクリーンショット 2022-09-25 13 55 54" src="https://user-images.githubusercontent.com/47273077/192278742-f6928f13-dbc7-48c4-aa1c-191126dd729f.png">
 
+------
+## Advanced retries
 
